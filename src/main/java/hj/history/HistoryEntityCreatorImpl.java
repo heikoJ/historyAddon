@@ -24,12 +24,8 @@ public class HistoryEntityCreatorImpl implements HistoryEntityCreator {
     @Override
     public void createHistoryForEntity(JavaType javaType) {
 
-
-
         createEntity(javaType.getFullyQualifiedTypeName());
         addFields();
-
-        shell.executeCommand("");
 
     }
 
