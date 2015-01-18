@@ -61,40 +61,17 @@ public class HistoryMetadata extends AbstractItdTypeDetailsProvidingMetadataItem
         super(identifier, aspectName, governorPhysicalTypeMetadata);
         Validate.isTrue(isValid(identifier), "Metadata identification string '" + identifier + "' does not appear to be a valid");
 
-        // Adding a new sample field definition
-        builder.addField(getSampleField());
-            
-        // Adding a new sample method definition
-        builder.addMethod(getSampleMethod());
+        builder.addMethod(getHistoryMethod(governorPhysicalTypeMetadata.getType()));
         
         // Create a representation of the desired output ITD
         itdTypeDetails = builder.build();
     }
     
-    /**
-     * Create metadata for a field definition. 
-     *
-     * @return a FieldMetadata object
-     */
-    private FieldMetadata getSampleField() {
-        // Note private fields are private to the ITD, not the target type, this is undesirable if a dependent method is pushed in to the target type
-        int modifier = 0;
 
-
-        
-        // Using the FieldMetadataBuilder to create the field definition. 
-        final FieldMetadataBuilder fieldBuilder = new FieldMetadataBuilder(getId(), // Metadata ID provided by supertype
-            modifier, // Using package protection rather than private
-            new ArrayList<AnnotationMetadataBuilder>(), // No annotations for this field
-            new JavaSymbolName("sampleField"), // Field name
-            JavaType.STRING); // Field type
-        
-        return fieldBuilder.build(); // Build and return a FieldMetadata instance
-    }
     
-    private MethodMetadata getSampleMethod() {
+    private MethodMetadata getHistoryMethod(JavaType javaType) {
         // Specify the desired method name
-        JavaSymbolName methodName = new JavaSymbolName("sampleMethod");
+        JavaSymbolName methodName = new JavaSymbolName("getHistory");
         
         // Check if a method with the same signature already exists in the target type
         final MethodMetadata method = methodExists(methodName, new ArrayList<AnnotatedJavaType>());
@@ -117,10 +94,18 @@ public class HistoryMetadata extends AbstractItdTypeDetailsProvidingMetadataItem
         
         // Create the method body
         InvocableMemberBodyBuilder bodyBuilder = new InvocableMemberBodyBuilder();
-        bodyBuilder.appendFormalLine("System.out.println(\"Hello World\");");
+        String typeName = javaType.getSimpleTypeName();
+        bodyBuilder.appendFormalLine("return " + typeName + "History.find" + typeName + "HistorysBy" + typeName + "IdEquals(getId()).getResultList();");
         
         // Use the MethodMetadataBuilder for easy creation of MethodMetadata
-        MethodMetadataBuilder methodBuilder = new MethodMetadataBuilder(getId(), Modifier.PUBLIC, methodName, JavaType.VOID_PRIMITIVE, parameterTypes, parameterNames, bodyBuilder);
+        MethodMetadataBuilder methodBuilder = new MethodMetadataBuilder(
+                getId(),
+                Modifier.PUBLIC,
+                methodName,
+                JavaType.listOf(new JavaType(javaType.getFullyQualifiedTypeName() + "History")),
+                parameterTypes,
+                parameterNames,
+                bodyBuilder);
         methodBuilder.setAnnotations(annotations);
         methodBuilder.setThrowsTypes(throwsTypes);
         
